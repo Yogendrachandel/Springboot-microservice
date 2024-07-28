@@ -1,0 +1,39 @@
+services:
+  accounts:
+    image: "yogendra/accounts:s4"
+    container_name: accounts-service
+    ports:
+      - "8080:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    networks:
+      - myNetwork
+  loans:
+    image: "yogendra/loans:s4"
+    container_name: loans-service
+    ports:
+      - "8090:8090"
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    networks:
+      - myNetwork
+  cards:
+    image: "yogendra/cards:s4"
+    container_name: cards-service
+    ports:
+      - "9000:9000"
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    networks:
+      - myNetwork
+
+# defining Network as myNetwork with bridge type, all 3 service is same network ,can communicate
+networks:
+  myNetwork:
+    driver: "bridge"
