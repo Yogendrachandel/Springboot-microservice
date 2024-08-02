@@ -1,0 +1,83 @@
+server:
+  port: 8072
+
+spring:
+  application:
+    name: "gatewayserver"
+
+  #spring config server details ,where configserver is the name of config server service
+  config:
+    import: "optional:configserver:http://localhost:8071/"
+
+  #gateway server will discover all the services registered with Eureka server
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+          lower-case-service-id: true # now all other services call with lowercase name like -http://localhost:8072/accounts/api/create
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  #whether to enable gateway endpoint for this service , by Get call as : http://localhost:8080/actuator/gateway
+  endpoint:
+    gateway:
+      enabled: true
+
+    #environment related info like - /actuator/info
+  info:
+    env:
+      enabled: true
+
+
+#Eureka server config,moving this to the cloud config server,
+#eureka:
+#  instance:
+#    preferIpAddress: true # means prefrence to registered as IP.
+#  client:
+#    fetchRegistry: true
+#    registerWithEureka: true
+#    serviceUrl:
+#      defaultZone: http://localhost:8070/eureka/  #Eureka server
+
+
+#enabled the root package Debug for our Filters class(with debug statements logs)
+logging:
+  level:
+    com:
+      example:
+        learn: DEBUG
+
+
+#This info will show in Eureka server dashboard.
+info:
+  app:
+    name: "Gateway"
+    description: "Bank gateway Application"
+    version: "1.0.0"
+
+
+resilience4j.circuitbreaker:
+  configs:
+    default:
+      #slidingWindowSize -  after this number of calls monitoring ,circuit breaker take decision to move from close to open or open to close state
+      slidingWindowSize: 10
+      #permittedNumberOfCallsInHalfOpenState - In half open state , 2 calls permitted to take decision to move in close state or open state.
+      permittedNumberOfCallsInHalfOpenState: 2
+      #failureRateThreshold - if 50 percent of calls failed then state will change to open from close state.
+      failureRateThreshold: 50
+      #waitDurationInOpenState- wait for this time to move from open state to HalfOPen state.
+      waitDurationInOpenState: 10000
+
+
+
+
+
+#To play with resilence :
+#  first hit this http://localhost:8072/actuator
+#  then find this-- http://localhost:8072/actuator/circuitbreakers
+#  then hit this - http://localhost:8072/actuator/circuitbreakerevents/accountsCircuitBreaker
+# accountsCircuitBreaker mentioned in main class
