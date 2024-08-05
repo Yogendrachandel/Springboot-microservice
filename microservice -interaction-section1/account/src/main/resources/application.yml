@@ -21,7 +21,7 @@ spring:
       ddl-auto: update
     show-sql: true
 
-  #spring config server details ,where configserver is the name of config server service
+  #spring config server details ,where configserver is the name of config server service,whereas optional tells the accounts microservice that if configserver is not up and running ,still account service will start with warning 
   config:
     import: "optional:configserver:http://localhost:8071/"
 
