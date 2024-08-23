@@ -1,0 +1,100 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: "accounts"
+  profiles:
+    active: "prod" #Profiles picked from Springboot config server of GIT
+
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password: ''
+  h2:
+    console:
+      enabled: true
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  #spring config server details ,where configserver is the name of config server service
+  config:
+    import: "optional:configserver:http://localhost:8071/"
+
+ # feign will  wrap all the methods with circuit breaker pattern(like account to card communication under feign client).
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  #whether to enable shutdown endpoint for this service ,true means  we can shutdown service by POST call as : http://localhost:8080/actuator/shutdown
+  endpoint:
+    shutdown:
+      enabled: true
+
+  #environment related info like - /actuator/info
+  info:
+    env:
+      enabled: true
+
+#Note
+#1) if after application start/deployment and then config changes done in Git Hub then we
+#need to refresh the endpoint of our every  service(If we have muliple services) with POST request without body as below: and then it will pick latest change without restart
+# http://localhost:8080/actuator/refresh
+
+## below is the default config for rabbitMq ,for refresh the Git Config server configuration
+  rabbitmq:
+    host: "localhost"
+    port: 5672
+    username: "guest"
+    password: "guest"
+
+#Note- Now to overcome the refersh for every service(If multipleServices using githUb config)
+#we introduce RabbitMq data bus as above . and now we will refresh any one service and rabbitMq sync all
+#other services also.No need to refresh each and evry service. This time we use the POST endpoint as below
+#http://localhost:8080/actuator/busrefresh
+
+# Eureka server config
+eureka:
+  instance:
+    preferIpAddress: true # means when another try to call account service ,eureka will provide IP rather then DNS name
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: http://localhost:8070/eureka/  #Eureka server
+
+#This info will show in Eureka server dashboard.
+info:
+  app:
+   name: "accounts"
+   description: "Bank Accounts Application"
+   version: "1.0.0"
+
+resilience4j.circuitbreaker:
+ configs:
+   default:
+    #slidingWindowSize -  after this number of calls monitoring ,circuit breaker take decision to move from close to open or open to close state
+    slidingWindowSize: 10
+    #permittedNumberOfCallsInHalfOpenState - In half open state , 2 calls permitted to take decision to move in close state or open state.
+    permittedNumberOfCallsInHalfOpenState: 2
+    #failureRateThreshold - if 50 percent of calls failed then state will change to open from close state.
+    failureRateThreshold: 50
+    #waitDurationInOpenState- wait for this time to move from open state to HalfOPen state.
+    waitDurationInOpenState: 10000
+
+
+#If u wants to see how many apps registered with Eureka :http://localhost:8070/eureka/apps
+# for only Info regarding one service within Eureka :http://localhost:8070/eureka/apps/<serviceName>
+
+
+#To check all actuator endpoints details : http://localhost:8080/actuator
